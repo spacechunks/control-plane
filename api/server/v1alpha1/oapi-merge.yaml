@@ -1,5 +1,5 @@
 inputs:
-  - inputFile: ../../job
+  - inputFile: ../../job/v1alpha1
   - inputFile: ../../common
   - inputFile: flavor
   - inputFile: server
