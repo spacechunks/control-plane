@@ -1,0 +1,21 @@
+components:
+  schemas:
+    JobState:
+      type: string
+      enum:
+        - running
+        - completed
+        - failed
+    Job:
+      type: object
+      description: 'Async op'
+      required:
+        - state
+        - resourceId
+      properties:
+        state:
+          $ref: '#/components/schemas/JobState'
+        resourceId:
+          type: string
+        error:
+          $ref: '#/components/schemas/Error'

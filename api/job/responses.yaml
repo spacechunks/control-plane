@@ -1,0 +1,8 @@
+components:
+  responses:
+    JobCreateResponse:
+      description: The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Job'

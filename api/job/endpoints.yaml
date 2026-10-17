@@ -1,0 +1,22 @@
+paths:
+  /v1alpha1/jobs/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: get_job
+      summary: Gets a Job
+      tags:
+        - jobs
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '404':
+          $ref: '#/components/responses/NotFoundError'

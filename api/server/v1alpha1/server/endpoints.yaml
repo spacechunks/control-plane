@@ -1,0 +1,77 @@
+paths:
+  /v1alpha1/servers:
+    get:
+      operationId: list_servers
+      summary: List servers
+      tags:
+        - servers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                servers:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Flavor'
+    post:
+      operationId: create_server
+      summary: Create a server
+      tags:
+        - servers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerCreateRequest'
+      responses:
+        '202':
+          $ref: '#/components/responses/JobCreateResponse'
+  /v1alpha1/servers/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: get_server
+      summary: Get a server
+      tags:
+        - servers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    patch:
+      operationId: update_server
+      summary: Update a server
+      tags:
+        - servers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerUpdateRequest'
+      responses:
+        '202':
+          $ref: '#/components/responses/JobCreateResponse'
+    delete:
+      operationId: delete_server
+      summary: 'Delete a server. The root volume is retained and not deleted with the server.'
+      tags:
+        - servers
+      responses:
+        '202':
+          $ref: '#/components/responses/JobCreateResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'

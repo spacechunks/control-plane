@@ -1,0 +1,33 @@
+components:
+  schemas:
+    FlavorArch:
+      type: string
+      enum:
+        - arm64
+        - amd64
+    Flavor:
+      type: object
+      required:
+        - id
+        - name
+        - memory
+        - cpu
+        - arch
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        memory:
+          type: string
+          examples:
+            - 1GiB
+        cpu:
+          type: number
+          format: float
+        arch:
+          $ref: '#/components/schemas/FlavorArch'
+

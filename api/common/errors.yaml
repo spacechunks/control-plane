@@ -1,0 +1,20 @@
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - type
+        - message
+      properties:
+        type:
+          type: string
+          description: Machine-readable error type, e.g. "validation_error".
+        message:
+          type: string
+  responses:
+    NotFoundError:
+      description: The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

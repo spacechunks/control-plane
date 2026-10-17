@@ -1,0 +1,39 @@
+paths:
+  /v1alpha1/flavors:
+    get:
+      operationId: list_flavors
+      summary: List flavors
+      tags:
+        - flavors
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                flavors:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Flavor'
+  /v1alpha1/flavors/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: get_flavors
+      summary: Get a flavor
+      tags:
+        - flavors
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Flavor'
+        '404':
+          $ref: '#/components/responses/NotFoundError'

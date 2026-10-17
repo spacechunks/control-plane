@@ -1,0 +1,87 @@
+components:
+  schemas:
+    ServerType:
+      type: string
+      enum:
+        - ephemeral
+        - persistent
+    ServerState:
+      type: string
+      enum:
+        - pending
+        - running
+        - updating
+        - deleting
+        - error
+    ServerNetwork:
+      type: object
+      properties:
+        ipv4:
+          type: string
+          format: ipv4
+        port:
+          type: integer
+    Server:
+      type: object
+      required:
+        - type
+        - id
+        - name
+        - state
+        - flavorId
+      properties:
+        type:
+          $ref: '#/components/schemas/ServerType'
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        state:
+          $ref: '#/components/schemas/ServerState'
+        flavorId:
+          type: string
+          format: uuid
+        network:
+          $ref: '#/components/schemas/ServerNetwork'
+        labels:
+          type: object
+        availabilityZone:
+          type: string
+
+    #
+    # REQUESTS
+    #
+
+    ServerCreateRequest:
+      type: object
+      required:
+        - type
+        - name
+        - flavorId
+      properties:
+        type:
+          $ref: '#/components/schemas/ServerType'
+        name:
+          type: string
+        flavorId:
+          type: string
+          format: uuid
+        labels:
+          type: object
+          additionalProperties:
+            type: string
+        availabilityZone:
+          type: string
+
+    ServerUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        flavorId:
+          type: string
+          format: uuid
+        labels:
+          type: object
+

@@ -1,0 +1,7 @@
+inputs:
+  - inputFile: ../../job
+  - inputFile: ../../common
+  - inputFile: flavor
+  - inputFile: server
+  - inputFile: openapi.yaml
+output: ./openapi.bundled.yaml
