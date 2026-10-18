@@ -1,5 +1,5 @@
 paths:
-  /v1alpha1/servers:
+  /server/v1alpha1/servers:
     get:
       operationId: list_servers
       summary: List servers
@@ -11,10 +11,13 @@ paths:
           content:
             application/json:
               schema:
-                servers:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Flavor'
+                type: object
+                required: [servers]
+                properties:
+                  servers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Server'
     post:
       operationId: create_server
       summary: Create a server
@@ -29,7 +32,7 @@ paths:
       responses:
         '202':
           $ref: '#/components/responses/JobCreateResponse'
-  /v1alpha1/servers/{id}:
+  /server/v1alpha1/servers/{id}:
     parameters:
       - name: id
         in: path

@@ -1,7 +1,8 @@
 inputs:
-  - inputFile: ../../job/v1alpha1
+  - inputFile: ../../job/v1alpha1/spec/schemas.yaml
+  - inputFile: ../../job/v1alpha1/spec/responses.yaml
   - inputFile: ../../common
-  - inputFile: flavor
-  - inputFile: server
-  - inputFile: openapi.yaml
-output: ./openapi.bundled.yaml
+  - inputFile: spec/flavor
+  - inputFile: spec/server
+  - inputFile: spec/openapi.yaml
+output: ./spec/openapi.bundled.yaml

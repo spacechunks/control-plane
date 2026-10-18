@@ -1,0 +1,7 @@
+package: v1alpha1
+output: ./api/job/v1alpha1/api.gen.go
+generate:
+  models: true
+  std-http-server: true
+  strict-server: true
+  embedded-spec: true

@@ -1,5 +1,5 @@
 paths:
-  /v1alpha1/flavors:
+  /server/v1alpha1/flavors:
     get:
       operationId: list_flavors
       summary: List flavors
@@ -11,11 +11,14 @@ paths:
           content:
             application/json:
               schema:
-                flavors:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Flavor'
-  /v1alpha1/flavors/{id}:
+                type: object
+                required: [flavors]
+                properties:
+                  flavors:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Flavor'
+  /server/v1alpha1/flavors/{id}:
     parameters:
       - name: id
         in: path
