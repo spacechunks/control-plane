@@ -1,0 +1,71 @@
+openapi: 3.1.0
+info:
+  title: Job API
+  version: v1alpha1
+paths:
+  /job/v1alpha1/jobs/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: get_job
+      summary: Gets a Job
+      tags:
+        - jobs
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - type
+        - message
+      properties:
+        type:
+          type: string
+          description: Machine-readable error type, e.g. "validation_error".
+        message:
+          type: string
+    JobState:
+      type: string
+      enum:
+        - running
+        - completed
+        - failed
+    Job:
+      type: object
+      description: Async op
+      required:
+        - state
+        - resourceId
+      properties:
+        state:
+          $ref: '#/components/schemas/JobState'
+        resourceId:
+          type: string
+        error:
+          $ref: '#/components/schemas/Error'
+  responses:
+    NotFoundError:
+      description: The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    JobCreateResponse:
+      description: The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Job'

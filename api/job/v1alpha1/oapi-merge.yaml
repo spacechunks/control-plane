@@ -1,0 +1,7 @@
+inputs:
+  - inputFile: ../../common
+  - inputFile: spec/schemas.yaml
+  - inputFile: spec/responses.yaml
+  - inputFile: spec/endpoints.yaml
+  - inputFile: spec/openapi.yaml
+output: ./spec/openapi.bundled.yaml

@@ -3,28 +3,7 @@ info:
   title: Server API
   version: v1alpha1
 paths:
-  /v1alpha1/jobs/{id}:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-    get:
-      operationId: get_job
-      summary: Gets a Job
-      tags:
-        - jobs
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Job'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-  /v1alpha1/flavors:
+  /server/v1alpha1/flavors:
     get:
       operationId: list_flavors
       summary: List flavors
@@ -36,11 +15,15 @@ paths:
           content:
             application/json:
               schema:
-                flavors:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Flavor'
-  /v1alpha1/flavors/{id}:
+                type: object
+                required:
+                  - flavors
+                properties:
+                  flavors:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Flavor'
+  /server/v1alpha1/flavors/{id}:
     parameters:
       - name: id
         in: path
@@ -62,7 +45,7 @@ paths:
                 $ref: '#/components/schemas/Flavor'
         '404':
           $ref: '#/components/responses/NotFoundError'
-  /v1alpha1/servers:
+  /server/v1alpha1/servers:
     get:
       operationId: list_servers
       summary: List servers
@@ -74,10 +57,14 @@ paths:
           content:
             application/json:
               schema:
-                servers:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Flavor'
+                type: object
+                required:
+                  - servers
+                properties:
+                  servers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Server'
     post:
       operationId: create_server
       summary: Create a server
@@ -92,7 +79,7 @@ paths:
       responses:
         '202':
           $ref: '#/components/responses/JobCreateResponse'
-  /v1alpha1/servers/{id}:
+  /server/v1alpha1/servers/{id}:
     parameters:
       - name: id
         in: path
@@ -139,19 +126,6 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 components:
-  responses:
-    JobCreateResponse:
-      description: The requested resource does not exist.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Job'
-    NotFoundError:
-      description: The requested resource does not exist.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
   schemas:
     JobState:
       type: string
@@ -291,3 +265,16 @@ components:
           format: uuid
         labels:
           type: object
+  responses:
+    JobCreateResponse:
+      description: The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Job'
+    NotFoundError:
+      description: The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
