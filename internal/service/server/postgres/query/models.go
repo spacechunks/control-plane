@@ -8,6 +8,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"net/netip"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -16,6 +17,7 @@ type ServerState string
 
 const (
 	ServerStatePENDING  ServerState = "PENDING"
+	ServerStateCREATING ServerState = "CREATING"
 	ServerStateRUNNING  ServerState = "RUNNING"
 	ServerStateUPDATING ServerState = "UPDATING"
 	ServerStateDELETING ServerState = "DELETING"
@@ -104,11 +106,13 @@ type SchemaMigration struct {
 }
 
 type Server struct {
-	ID     string
-	Type   ServerType
-	Name   string
-	State  ServerState
-	Labels []byte
-	Ipv4   *netip.Addr
-	Port   pgtype.Int4
+	ID        string
+	Type      ServerType
+	Name      string
+	State     ServerState
+	Labels    []byte
+	Ipv4      *netip.Addr
+	Port      pgtype.Int4
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }

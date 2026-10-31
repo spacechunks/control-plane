@@ -1,6 +1,9 @@
 package resource
 
-import "net/netip"
+import (
+	"net/netip"
+	"time"
+)
 
 type ServerState string
 
@@ -12,12 +15,22 @@ const (
 	ServerStateError    = "error"
 )
 
+type ServerType string
+
+const (
+	ServerTypeEphemeral  = "ephemeral"
+	ServerTypePersistent = "persistent"
+)
+
 type Server struct {
-	ID      string
-	Name    string
-	Labels  map[string]string
-	Network Network
-	State   ServerState
+	ID        string
+	Name      string
+	Type      ServerType
+	Labels    map[string]string
+	Network   Network
+	State     ServerState
+	CreatedAt time.Time
+	UpdateAt  time.Time
 }
 
 type Network struct {

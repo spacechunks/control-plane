@@ -9,7 +9,9 @@ CREATE TABLE server (
     state server_state NOT NULL DEFAULT 'PENDING',
     labels JSONB NOT NULL DEFAULT '{}',
     ipv4 INET,
-    port INTEGER
+    port INTEGER,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- migrate:down

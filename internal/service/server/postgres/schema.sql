@@ -21,6 +21,7 @@ SET row_security = off;
 
 CREATE TYPE public.server_state AS ENUM (
     'PENDING',
+    'CREATING',
     'RUNNING',
     'UPDATING',
     'DELETING',
@@ -62,7 +63,9 @@ CREATE TABLE public.server (
     state public.server_state DEFAULT 'PENDING'::public.server_state NOT NULL,
     labels jsonb DEFAULT '{}'::jsonb NOT NULL,
     ipv4 inet,
-    port integer
+    port integer,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
