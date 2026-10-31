@@ -10,15 +10,27 @@ import (
 	"syscall"
 
 	jobendpointv1alpha1 "github.com/spacechunks/control-plane/internal/service/job/endpoint/v1alpha1"
+	"github.com/spacechunks/control-plane/internal/service/server"
 	serverendpointv1alpha1 "github.com/spacechunks/control-plane/internal/service/server/endpoint/v1alpha1"
 )
 
 func main() {
 	var (
-		ctx           = context.Background()
-		jobHandler    = jobendpointv1alpha1.NewHandler()
-		serverHandler = serverendpointv1alpha1.NewHandler()
-		logger        = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+		ctx    = context.Background()
+		logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
+		//
+		// SERVER
+		//
+
+		serverService = server.NewService(logger.With("component", "server-service"))
+		serverHandler = serverendpointv1alpha1.NewHandler(serverService)
+
+		//
+		// JOB
+		//
+
+		jobHandler = jobendpointv1alpha1.NewHandler()
 
 		mux = http.NewServeMux()
 	)

@@ -1,0 +1,22 @@
+version: '2'
+sql:
+  - engine: postgresql
+    queries: internal/service/server/postgres/query.sql
+    schema: internal/service/server/postgres/schema.sql
+    gen:
+      go:
+        emit_sql_as_comment: true
+        package: query
+        out: internal/service/server/postgres/query
+        sql_package: pgx/v5
+        overrides:
+          - db_type: uuid
+            nullable: true
+            go_type:
+              type: '*string'
+          - db_type: uuid
+            go_type:
+              type: string
+          - db_type: "pg_catalog.timestamptz"
+            go_type:
+              type: "time.Time"

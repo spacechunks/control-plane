@@ -1,3 +1,29 @@
+DATABASE_URL := postgres://postgres:test@localhost:5432/postgres?sslmode=disable
+
+define start_db
+	@docker run --name testdb --rm -d -p 5432:5432 -e POSTGRES_PASSWORD=test postgres:17.2
+	@dbmate \
+		--migrations-dir $(MIGRATIONS_DIR) \
+		--schema-file $(SCHEMA_FILE) \
+		--wait migrate \
+		|| docker stop testdb
+endef
+
+
+dbgen-server: MIGRATIONS_DIR = ./internal/service/server/postgres/migrations
+dbgen-server: SCHEMA_FILE = ./internal/service/server/postgres/schema.sql
+dbgen-server: dbschema sqlc
+
+.PHONY: sqlc
+sqlc:
+	@sqlc generate
+
+.PHONY: dbschema
+dbschema: export DATABASE_URL := $(DATABASE_URL)
+dbschema:
+	$(call start_db)
+	@docker stop testdb
+
 .PHONY: job-api
 job-api: FILE = ./api/job/v1alpha1/oapi-merge.yaml
 job-api: api-spec
