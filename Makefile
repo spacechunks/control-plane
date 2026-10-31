@@ -1,3 +1,7 @@
+.PHONY: check-river-migrations
+check-river-migrations:
+	@./scripts/check-river-migrations.sh
+
 .PHONY: job-api
 job-api: FILE = ./api/job/v1alpha1/oapi-merge.yaml
 job-api: api-spec

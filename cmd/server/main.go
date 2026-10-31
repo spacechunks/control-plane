@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	riverqmigrations "github.com/spacechunks/control-plane/internal/riverq/migrations"
 	jobendpointv1alpha1 "github.com/spacechunks/control-plane/internal/service/job/endpoint/v1alpha1"
 	serverendpointv1alpha1 "github.com/spacechunks/control-plane/internal/service/server/endpoint/v1alpha1"
 )
@@ -29,6 +30,10 @@ func main() {
 
 	if err := jobendpointv1alpha1.AddToMux(logger, jobHandler, mux); err != nil {
 		die(logger, "failed adding job handlers", err)
+	}
+
+	if err := riverqmigrations.Migrate(""); err != nil {
+		die(logger, "failed running riverqueue migrations", err)
 	}
 
 	serv := http.Server{
