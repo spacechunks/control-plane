@@ -3,6 +3,7 @@ components:
     JobState:
       type: string
       enum:
+        - pending
         - running
         - completed
         - failed

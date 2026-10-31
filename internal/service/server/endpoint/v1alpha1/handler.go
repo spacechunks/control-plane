@@ -9,15 +9,19 @@ import (
 	serverapiv1alpha1 "github.com/spacechunks/control-plane/api/server/v1alpha1"
 	apierr "github.com/spacechunks/control-plane/internal/error"
 	"github.com/spacechunks/control-plane/internal/httphelper"
+	"github.com/spacechunks/control-plane/internal/service/server"
 )
 
 var _ serverapiv1alpha1.StrictServerInterface = (*Handler)(nil)
 
 type Handler struct {
+	serverService server.Service
 }
 
-func NewHandler() *Handler {
-	return &Handler{}
+func NewHandler(serverService server.Service) *Handler {
+	return &Handler{
+		serverService: serverService,
+	}
 }
 
 func AddToMux(logger *slog.Logger, h *Handler, mux *http.ServeMux) error {

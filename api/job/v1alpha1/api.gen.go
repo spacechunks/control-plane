@@ -25,6 +25,7 @@ import (
 const (
 	Completed JobState = "completed"
 	Failed    JobState = "failed"
+	Pending   JobState = "pending"
 	Running   JobState = "running"
 )
 
@@ -34,6 +35,8 @@ func (e JobState) Valid() bool {
 	case Completed:
 		return true
 	case Failed:
+		return true
+	case Pending:
 		return true
 	case Running:
 		return true
@@ -345,14 +348,14 @@ func (sh *strictHandler) GetJob(w http.ResponseWriter, r *http.Request, id strin
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"rFNNj9MwEP0r1sDRJC3sKbc9ANoiPqTlxlbIiaetq8Rj7ElFVfm/o3G2pS27ggM3Zz7evPcmc4COhkAe",
-	"PSdoDhAxBfIJy8cn4nc0evs2RooS6MgzepanCaF3nWFHvt4m8hJL3QYHI6+XEVfQwIv6N3o9ZVM9oeWc",
-	"NVhMXXRBQKCBrxtUEX+MmBitiphojB0qS5iUJ1b40yWuQBofsWTUiVyIFDCym7gPmJJZozx5HxAaSByd",
-	"X0PWj4HD1fiPpts4j68iGmvaHhUKspJirbBaV+oBdqZ3toj+XrIPUIG+HpA1iAwX0ULzbcrqE6HlqZ7a",
-	"LXYshBbU/snnNu19pyiAvpKGR8X/4LKGo4939kkvEhvGv4EtqL0vddfapu6LIc/ouz/OQT8O0hpH74WD",
-	"Ln9gj4wWNKyM6/Ec5GRq1uD8iooIx73kFtSq2y93oGGHMU2u7eamDxszl7EU0JvgoIE31byaiZGGN8XD",
-	"ekttfayVj1QfnM2SWmP5wcXxsmkxDt4jy5L05YG8ns3+21kI/BNH8fmDKLmZ3TzXfyJUX55rOZNxGEzc",
-	"T/yTMmrSwGadZAUiG5ZZbIlmQMYo4QM4GSxWgQZvBoQGnIXzzXMcUZ8Ju17WMuf8awA=",
+	"rFNNj9MwEP0r1sDRJC3sKbc9ANoiPqTlxlbIiaetq8Rj7ElFVfm/o0m2oQ27ggM3Zz7evPcmc4KGukAe",
+	"PSeoThAxBfIJh49PxO+o9/ZtjBQl0JBn9CxPE0LrGsOOfLlP5CWWmh12Rl4vI26gghflb/RyzKZyRMs5",
+	"a7CYmuiCgEAFX3eoIv7oMTFaFTFRHxtUljApT6zwp0tcgDQ+YsmoiVyIFDCyG7l3mJLZojz5GBAqSByd",
+	"30LWj4HTbPxH0+ycx1cRjTV1iwoFWUmxVlhsC/UAB9M6O4j+PmQfoAA9H5A1iAwX0UL1bczqidB6qqd6",
+	"jw0LoRXVf/K5TUffKAqgZ9LwrPgfXNZw9vHOPulFYsP4N7AV1fdD3Vzb2H015Bl99+c56PtOWgN6Kxw0",
+	"xN778SWjW2S0oGFjXIuXcJO9WYPzGxrkOG4lt6Ja3X65Aw0HjGn077A0bdiZpRCggN4EBxW8KZbFQiw1",
+	"vBvcLPdUl+da+UjlydksqS0Ov7p4P+xcLIT3yLIufX0qrxeL/3YgAv/EeXz+IEpuFjfP9U+EyuvDHQ6m",
+	"7zoTjyP/pIwaNbDZJlmGyIZ1Flui6ZAxSvgETgaLVaDBmw6hAmfh8h/g2KO+EDZf1jrn/GsA",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,
