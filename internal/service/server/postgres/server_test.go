@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/jackc/pgx/v5"
 	"github.com/spacechunks/control-plane/internal/service/server/server"
 	"github.com/spacechunks/control-plane/internal/service/server/test"
 	"github.com/spacechunks/control-plane/internal/service/server/test/fixture"
@@ -162,4 +163,25 @@ func TestUpdateServer(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDeleteServer(t *testing.T) {
+	t.Parallel()
+	var (
+		ctx      = context.Background()
+		pg       = runDB(t)
+		expected = fixture.Server()
+	)
+
+	test.InsertServer(t, expected)
+
+	actual, err := pg.DeleteServer(ctx, expected.ID)
+	require.NoError(t, err)
+
+	if d := cmp.Diff(expected, actual, cmpopts.EquateComparable(netip.Addr{})); d != "" {
+		t.Fatalf("mismatch (-want +got):\n%s", d)
+	}
+
+	_, err = pg.ServerByID(ctx, expected.ID)
+	require.ErrorIs(t, err, pgx.ErrNoRows)
 }

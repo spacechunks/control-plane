@@ -128,3 +128,28 @@ func (db DB) UpdateServer(ctx context.Context, args server.UpdateServerArgs) (se
 
 	return ret, nil
 }
+
+func (db DB) DeleteServer(ctx context.Context, id string) (server.Server, error) {
+	var ret server.Server
+	if err := db.doTX(ctx, func(q *query.Queries) error {
+		s, err := q.ServerByID(ctx, id)
+		if err != nil {
+			return fmt.Errorf("server by id: %w", err)
+		}
+
+		if err := q.DeleteServer(ctx, id); err != nil {
+			return fmt.Errorf("update: %w", err)
+		}
+
+		ret, err = toDomainServer(s)
+		if err != nil {
+			return fmt.Errorf("to domain: %w", err)
+		}
+
+		return nil
+	}); err != nil {
+		return server.Server{}, err
+	}
+
+	return ret, nil
+}

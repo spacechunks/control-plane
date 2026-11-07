@@ -15,3 +15,6 @@ UPDATE server SET
     port = $4,
     updated_at = $5
 WHERE id = $6;
+
+-- name: DeleteServer :exec
+DELETE FROM server WHERE id = $1;

@@ -7,7 +7,10 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spacechunks/control-plane/internal/service/server/postgres/query"
+	"github.com/spacechunks/control-plane/internal/service/server/server"
 )
+
+var _ server.Repository = (*DB)(nil)
 
 type DB struct {
 	logger *slog.Logger
