@@ -23,6 +23,7 @@ func Migrate(dsn string) error {
 	mate.FS = fs
 	mate.Log = io.Discard
 	mate.MigrationsDir = []string{"./"}
+	mate.AutoDumpSchema = false
 
 	if err := mate.Wait(); err != nil {
 		return fmt.Errorf("wait migrations: %w", err)

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/spacechunks/control-plane/internal/service/server/postgres/query"
 	"github.com/spacechunks/control-plane/internal/service/server/server"
 )
@@ -60,26 +61,69 @@ func (db DB) ServerByID(ctx context.Context, id string) (server.Server, error) {
 		return server.Server{}, fmt.Errorf("get: %w", err)
 	}
 
-	var labels map[string]string
-	if err := json.Unmarshal(s.Labels, &labels); err != nil {
-		return server.Server{}, fmt.Errorf("unmarshal labels: %w", err)
+	ret, err := toDomainServer(s)
+	if err != nil {
+		return server.Server{}, fmt.Errorf("to domain: %w", err)
 	}
 
-	ret := server.Server{
-		ID:        s.ID,
-		Name:      s.Name,
-		Type:      server.ServerType(strings.ToLower(string(s.Type))),
-		Labels:    labels,
-		State:     server.ServerState(strings.ToLower(string(s.State))),
-		CreatedAt: s.CreatedAt.UTC(),
-		UpdatedAt: s.UpdatedAt.UTC(),
-	}
+	return ret, nil
+}
 
-	if s.Ipv4 != nil {
-		ret.Network = &server.Network{
-			IP4:  *s.Ipv4,
-			Port: uint16(s.Port.Int32),
+func (db DB) UpdateServer(ctx context.Context, args server.UpdateServerArgs) (server.Server, error) {
+	var ret server.Server
+
+	if err := db.doTX(ctx, func(q *query.Queries) error {
+		old, err := q.ServerByID(ctx, args.ID)
+		if err != nil {
+			return fmt.Errorf("server by id: %w", err)
 		}
+
+		update := query.UpdateServerParams{
+			Name:      old.Name,
+			Labels:    old.Labels,
+			Ipv4:      old.Ipv4,
+			Port:      old.Port,
+			UpdatedAt: args.UpdatedAt,
+			ID:        old.ID,
+		}
+
+		if args.Name != nil {
+			update.Name = *args.Name
+		}
+
+		if args.Network != nil {
+			update.Ipv4 = &args.Network.IP4
+			update.Port = pgtype.Int4{
+				Int32: int32(args.Network.Port),
+				Valid: true,
+			}
+		}
+
+		if args.Labels != nil {
+			labels, err := json.Marshal(args.Labels)
+			if err != nil {
+				return fmt.Errorf("marshal labels: %w", err)
+			}
+			update.Labels = labels
+		}
+
+		if err := q.UpdateServer(ctx, update); err != nil {
+			return fmt.Errorf("update: %w", err)
+		}
+
+		s, err := q.ServerByID(ctx, args.ID)
+		if err != nil {
+			return fmt.Errorf("server by id after update: %w", err)
+		}
+
+		ret, err = toDomainServer(s)
+		if err != nil {
+			return fmt.Errorf("to domain: %w", err)
+		}
+
+		return nil
+	}); err != nil {
+		return server.Server{}, err
 	}
 
 	return ret, nil

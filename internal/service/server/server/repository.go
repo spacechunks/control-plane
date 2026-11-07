@@ -17,9 +17,9 @@ type CreateServerArgs struct {
 
 type UpdateServerArgs struct {
 	ID        string
-	Name      string
+	Name      *string
 	Labels    map[string]string
-	Network   Network
+	Network   *Network
 	UpdatedAt time.Time
 }
 
