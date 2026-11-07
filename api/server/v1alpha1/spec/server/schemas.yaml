@@ -5,10 +5,12 @@ components:
       enum:
         - ephemeral
         - persistent
+        - minigame
     ServerState:
       type: string
       enum:
         - pending
+        - creating
         - running
         - updating
         - deleting
