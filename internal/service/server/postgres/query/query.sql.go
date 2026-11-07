@@ -8,33 +8,36 @@ package query
 import (
 	"context"
 	"net/netip"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createServer = `-- name: CreateServer :exec
 INSERT INTO server
-    (id, type, name, state, labels, ipv4, port)
+    (id, type, name, state, labels, ipv4, port, created_at, updated_at)
 VALUES
-    ($1, $2, $3, $4, $5, $6, $7)
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 `
 
 type CreateServerParams struct {
-	ID     string
-	Type   ServerType
-	Name   string
-	State  ServerState
-	Labels []byte
-	Ipv4   *netip.Addr
-	Port   pgtype.Int4
+	ID        string
+	Type      ServerType
+	Name      string
+	State     ServerState
+	Labels    []byte
+	Ipv4      *netip.Addr
+	Port      pgtype.Int4
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 // CreateServer
 //
 //	INSERT INTO server
-//	    (id, type, name, state, labels, ipv4, port)
+//	    (id, type, name, state, labels, ipv4, port, created_at, updated_at)
 //	VALUES
-//	    ($1, $2, $3, $4, $5, $6, $7)
+//	    ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 func (q *Queries) CreateServer(ctx context.Context, arg CreateServerParams) error {
 	_, err := q.db.Exec(ctx, createServer,
 		arg.ID,
@@ -44,6 +47,72 @@ func (q *Queries) CreateServer(ctx context.Context, arg CreateServerParams) erro
 		arg.Labels,
 		arg.Ipv4,
 		arg.Port,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	return err
+}
+
+const serverByID = `-- name: ServerByID :one
+SELECT id, type, name, state, labels, ipv4, port, created_at, updated_at FROM server WHERE id = $1
+`
+
+// ServerByID
+//
+//	SELECT id, type, name, state, labels, ipv4, port, created_at, updated_at FROM server WHERE id = $1
+func (q *Queries) ServerByID(ctx context.Context, id string) (Server, error) {
+	row := q.db.QueryRow(ctx, serverByID, id)
+	var i Server
+	err := row.Scan(
+		&i.ID,
+		&i.Type,
+		&i.Name,
+		&i.State,
+		&i.Labels,
+		&i.Ipv4,
+		&i.Port,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateServer = `-- name: UpdateServer :exec
+UPDATE server SET
+    name = $1,
+    labels = $2,
+    ipv4 = $3,
+    port = $4,
+    updated_at = $5
+WHERE id = $6
+`
+
+type UpdateServerParams struct {
+	Name      string
+	Labels    []byte
+	Ipv4      *netip.Addr
+	Port      pgtype.Int4
+	UpdatedAt time.Time
+	ID        string
+}
+
+// UpdateServer
+//
+//	UPDATE server SET
+//	    name = $1,
+//	    labels = $2,
+//	    ipv4 = $3,
+//	    port = $4,
+//	    updated_at = $5
+//	WHERE id = $6
+func (q *Queries) UpdateServer(ctx context.Context, arg UpdateServerParams) error {
+	_, err := q.db.Exec(ctx, updateServer,
+		arg.Name,
+		arg.Labels,
+		arg.Ipv4,
+		arg.Port,
+		arg.UpdatedAt,
+		arg.ID,
 	)
 	return err
 }

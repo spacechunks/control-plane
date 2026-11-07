@@ -3,8 +3,6 @@ package server
 import (
 	"context"
 	"log/slog"
-
-	"github.com/spacechunks/control-plane/internal/service/server/resource"
 )
 
 type CreateEphemeralServerArgs struct {
@@ -15,16 +13,18 @@ type CreateEphemeralServerArgs struct {
 }
 
 type Service interface {
-	CreateEphemeralServer(ctx context.Context, args CreateEphemeralServerArgs) (resource.Server, error)
+	CreateEphemeralServer(ctx context.Context, args CreateEphemeralServerArgs) (Server, error)
 }
 
 type Backend struct {
 	logger *slog.Logger
 }
 
-func (s Backend) CreateEphemeralServer(ctx context.Context, args CreateEphemeralServerArgs) (resource.Server, error) {
+func (s Backend) CreateEphemeralServer(ctx context.Context, args CreateEphemeralServerArgs) (Server, error) {
 	// TODO: db calls
-	return resource.Server{}, nil
+
+	//fixture.Server()
+	return Server{}, nil
 }
 
 func NewService(logger *slog.Logger) *Backend {
