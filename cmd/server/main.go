@@ -10,8 +10,8 @@ import (
 	"syscall"
 
 	jobendpointv1alpha1 "github.com/spacechunks/control-plane/internal/service/job/endpoint/v1alpha1"
-	"github.com/spacechunks/control-plane/internal/service/server"
 	serverendpointv1alpha1 "github.com/spacechunks/control-plane/internal/service/server/endpoint/v1alpha1"
+	"github.com/spacechunks/control-plane/internal/service/server/server"
 )
 
 func main() {

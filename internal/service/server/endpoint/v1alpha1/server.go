@@ -6,7 +6,7 @@ import (
 
 	serverv1alpha1 "github.com/spacechunks/control-plane/api/server/v1alpha1"
 	"github.com/spacechunks/control-plane/internal/ptr"
-	"github.com/spacechunks/control-plane/internal/service/server"
+	"github.com/spacechunks/control-plane/internal/service/server/server"
 )
 
 func (s Handler) ListServers(ctx context.Context, req serverv1alpha1.ListServersRequestObject) (serverv1alpha1.ListServersResponseObject, error) {

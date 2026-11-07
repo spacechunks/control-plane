@@ -9,7 +9,7 @@ import (
 	serverapiv1alpha1 "github.com/spacechunks/control-plane/api/server/v1alpha1"
 	apierr "github.com/spacechunks/control-plane/internal/error"
 	"github.com/spacechunks/control-plane/internal/httphelper"
-	"github.com/spacechunks/control-plane/internal/service/server"
+	"github.com/spacechunks/control-plane/internal/service/server/server"
 )
 
 var _ serverapiv1alpha1.StrictServerInterface = (*Handler)(nil)
