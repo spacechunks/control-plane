@@ -42,3 +42,20 @@ oapi-codegen:
 api-spec:
 	scripts/yaml-merge.sh $(FILE)
 	npx --yes @redocly/cli bundle $(shell dirname $(FILE))/spec/openapi.bundled.yaml -o $(shell dirname $(FILE))/spec/openapi.bundled.yaml
+
+.PHONY: dev
+stop-dev:
+	docker compose -f dev/docker-compose.yaml down
+
+.PHONY: dev
+start-dev:
+	docker compose -f dev/docker-compose.yaml build
+	docker compose -f dev/docker-compose.yaml up db -d
+	dbmate --url postgres://app:secret@localhost:5432/server_service?sslmode=disable wait
+
+	# SERVER SERVICE DB INIT
+	docker compose -f dev/docker-compose.yaml exec -T db psql -U app -d postgres -c 'CREATE DATABASE server_service'
+	dbmate --no-dump-schema --url postgres://app:secret@localhost:5432/server_service?sslmode=disable --migrations-dir ./internal/service/server/postgres/migrations migrate
+	docker compose -f dev/docker-compose.yaml exec -T db psql -v ON_ERROR_STOP=1 -U app -d server_service < ./dev/server_service_init.sql
+
+	SERVER_CLUSTERS="$$(jq -c . ./dev/clusterset_testdata.json)" docker compose -f dev/docker-compose.yaml up app

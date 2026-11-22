@@ -10,6 +10,10 @@ import (
 
 type ClusterSet map[string]*kubernetes.Clientset
 
+func (s *ClusterSet) UnmarshalText(text []byte) error {
+	return s.UnmarshalJSON(text)
+}
+
 func (s *ClusterSet) UnmarshalJSON(data []byte) error {
 	var raw map[string]string
 	if err := json.Unmarshal(data, &raw); err != nil {
