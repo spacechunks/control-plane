@@ -9,36 +9,37 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/caarlos0/env/v11"
 	jobendpointv1alpha1 "github.com/spacechunks/control-plane/internal/service/job/endpoint/v1alpha1"
-	serverendpointv1alpha1 "github.com/spacechunks/control-plane/internal/service/server/endpoint/v1alpha1"
-	"github.com/spacechunks/control-plane/internal/service/server/server"
+	"github.com/spacechunks/control-plane/internal/service/server"
 )
+
+type config struct {
+	ServerConfig server.Config `envPrefix:"SERVER_"`
+}
 
 func main() {
 	var (
 		ctx    = context.Background()
 		logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+		mux    = http.NewServeMux()
 
-		//
-		// SERVER
-		//
-
-		serverService = server.NewService(logger.With("component", "server-service"))
-		serverHandler = serverendpointv1alpha1.NewHandler(serverService)
-
-		//
-		// JOB
-		//
-
+		// TODO: move to job.Init
 		jobHandler = jobendpointv1alpha1.NewHandler()
-
-		mux = http.NewServeMux()
 	)
 
-	if err := serverendpointv1alpha1.AddToMux(logger, serverHandler, mux); err != nil {
-		die(logger, "failed adding server handlers", err)
+	cfg, err := env.ParseAs[config]()
+	if err != nil {
+		die(logger, "failed to read config", err)
 	}
 
+	// service inits
+
+	if err := server.Init(ctx, logger, mux, cfg.ServerConfig); err != nil {
+		die(logger, "failed to initialize server service", err)
+	}
+
+	// TODO: move to job.Init
 	if err := jobendpointv1alpha1.AddToMux(logger, jobHandler, mux); err != nil {
 		die(logger, "failed adding job handlers", err)
 	}

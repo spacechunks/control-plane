@@ -90,7 +90,8 @@ func (s Backend) CreateMinigameServer(ctx context.Context, args CreateMinigameSe
 	}
 
 	var pod corev1.Pod
-	err = eventually.Run(ctx, 10*time.Second, 200*time.Millisecond, func(eCtx context.Context) error {
+	// TODO: make configurable
+	err = eventually.Run(ctx, 5*time.Minute, 200*time.Millisecond, func(eCtx context.Context) error {
 		pods, err := kubeSvc.PodByLabels(eCtx, map[string]string{
 			"chunks.cloud/server-id": server.ID,
 		})
@@ -108,6 +109,15 @@ func (s Backend) CreateMinigameServer(ctx context.Context, args CreateMinigameSe
 	if err != nil {
 		return Server{}, fmt.Errorf("eventually: %w", err)
 	}
+
+	s.logger.InfoContext(
+		ctx,
+		"pod found for minigame server",
+		"pod_name", pod.Name,
+		"namespace", pod.Namespace,
+		"server_id", server.ID,
+		"cluster_name", server.Cluster.Name,
+	)
 
 	// TODO: make configurable
 	err = eventually.Run(ctx, 5*time.Minute, 200*time.Millisecond, func(eCtx context.Context) error {

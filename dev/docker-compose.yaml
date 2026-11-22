@@ -1,0 +1,26 @@
+services:
+  app:
+    build: ../
+    environment:
+      SERVER_DB_URL: postgres://app:secret@db:5432/server_service?sslmode=disable
+      SERVER_NAMESPACE: default
+      SERVER_CLUSTERS: ${SERVER_CLUSTERS}
+    networks:
+    - default
+    - kind
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: app
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: pg_isready -U app
+      interval: 2s
+
+networks:
+  kind:
+    external: true
