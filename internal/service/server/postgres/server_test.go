@@ -26,15 +26,18 @@ func TestCreateServer(t *testing.T) {
 		})
 	)
 
-	args := server.CreateServerArgs{
+	args := server.CreateServerDBArgs{
 		ID:        expected.ID,
 		Name:      expected.Name,
 		Type:      expected.Type,
 		State:     expected.State,
 		Labels:    expected.Labels,
+		ClusterID: fixture.Cluster().ID,
 		CreatedAt: expected.CreatedAt,
 		UpdatedAt: expected.UpdatedAt,
 	}
+
+	test.InsertClusters(t, fixture.Cluster())
 
 	actual, err := pg.CreateServer(ctx, args)
 	require.NoError(t, err)
@@ -53,7 +56,7 @@ func TestServerByID(t *testing.T) {
 		expected = fixture.Server()
 	)
 
-	args := server.CreateServerArgs{
+	args := server.CreateServerDBArgs{
 		ID:        expected.ID,
 		Name:      expected.Name,
 		Type:      expected.Type,
@@ -63,6 +66,7 @@ func TestServerByID(t *testing.T) {
 		UpdatedAt: expected.UpdatedAt,
 	}
 
+	test.InsertClusters(t, fixture.Cluster())
 	test.InsertServers(t, expected)
 
 	actual, err := pg.ServerByID(ctx, args.ID)
@@ -77,12 +81,12 @@ func TestUpdateServer(t *testing.T) {
 	now := time.Now()
 	tc := []struct {
 		name     string
-		args     server.UpdateServerArgs
+		args     server.UpdateServerDBArgs
 		expected server.Server
 	}{
 		{
 			name: "update name",
-			args: server.UpdateServerArgs{
+			args: server.UpdateServerDBArgs{
 				ID:        fixture.Server().ID,
 				Name:      new("new-name"),
 				UpdatedAt: now,
@@ -94,7 +98,7 @@ func TestUpdateServer(t *testing.T) {
 		},
 		{
 			name: "update labels",
-			args: server.UpdateServerArgs{
+			args: server.UpdateServerDBArgs{
 				ID:        fixture.Server().ID,
 				Labels:    map[string]string{"new": "labels"},
 				UpdatedAt: now,
@@ -106,7 +110,7 @@ func TestUpdateServer(t *testing.T) {
 		},
 		{
 			name: "update network",
-			args: server.UpdateServerArgs{
+			args: server.UpdateServerDBArgs{
 				ID: fixture.Server().ID,
 				Network: &server.Network{
 					IP4:  netip.MustParseAddr("192.0.2.33"),
@@ -124,7 +128,7 @@ func TestUpdateServer(t *testing.T) {
 		},
 		{
 			name: "update all",
-			args: server.UpdateServerArgs{
+			args: server.UpdateServerDBArgs{
 				ID:     fixture.Server().ID,
 				Name:   new("new-name"),
 				Labels: map[string]string{"2": "3"},
@@ -132,6 +136,7 @@ func TestUpdateServer(t *testing.T) {
 					IP4:  netip.MustParseAddr("192.0.2.33"),
 					Port: 1337,
 				},
+				State:     new(server.ServerStateDeleting),
 				UpdatedAt: now,
 			},
 			expected: fixture.Server(func(s *server.Server) {
@@ -141,6 +146,19 @@ func TestUpdateServer(t *testing.T) {
 					IP4:  netip.MustParseAddr("192.0.2.33"),
 					Port: 1337,
 				}
+				s.State = server.ServerStateDeleting
+				s.UpdatedAt = now
+			}),
+		},
+		{
+			name: "update state",
+			args: server.UpdateServerDBArgs{
+				ID:        fixture.Server().ID,
+				State:     new(server.ServerStateDeleting),
+				UpdatedAt: now,
+			},
+			expected: fixture.Server(func(s *server.Server) {
+				s.State = server.ServerStateDeleting
 				s.UpdatedAt = now
 			}),
 		},
@@ -153,6 +171,7 @@ func TestUpdateServer(t *testing.T) {
 				pg  = runDB(t)
 			)
 
+			test.InsertClusters(t, fixture.Cluster())
 			test.InsertServers(t, fixture.Server())
 
 			actual, err := pg.UpdateServer(ctx, tt.args)
@@ -173,6 +192,7 @@ func TestDeleteServer(t *testing.T) {
 		expected = fixture.Server()
 	)
 
+	test.InsertClusters(t, fixture.Cluster())
 	test.InsertServers(t, expected)
 
 	actual, err := pg.DeleteServer(ctx, expected.ID)

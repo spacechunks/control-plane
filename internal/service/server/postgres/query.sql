@@ -4,12 +4,17 @@
 
 -- name: CreateServer :exec
 INSERT INTO server
-    (id, type, name, state, labels, ipv4, port, created_at, updated_at)
+    (id, type, name, state, labels, ipv4, port, created_at, updated_at, cluster_id)
 VALUES
-    ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);
 
 -- name: ServerByID :one
-SELECT * FROM server WHERE id = $1;
+SELECT
+    sqlc.embed(server),
+    sqlc.embed(cluster)
+FROM server
+    JOIN cluster ON cluster.id = server.cluster_id
+WHERE server.id = $1;
 
 -- name: UpdateServer :exec
 UPDATE server SET
@@ -17,8 +22,9 @@ UPDATE server SET
     labels = $2,
     ipv4 = $3,
     port = $4,
-    updated_at = $5
-WHERE id = $6;
+    updated_at = $5,
+    state = $6
+WHERE id = $7;
 
 -- name: DeleteServer :exec
 DELETE FROM server WHERE id = $1;

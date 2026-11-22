@@ -63,9 +63,9 @@ func (q *Queries) BestCluster(ctx context.Context) (BestClusterRow, error) {
 const createServer = `-- name: CreateServer :exec
 
 INSERT INTO server
-    (id, type, name, state, labels, ipv4, port, created_at, updated_at)
+    (id, type, name, state, labels, ipv4, port, created_at, updated_at, cluster_id)
 VALUES
-    ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 `
 
 type CreateServerParams struct {
@@ -78,14 +78,15 @@ type CreateServerParams struct {
 	Port      pgtype.Int4
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	ClusterID *string
 }
 
 // SERVER
 //
 //	INSERT INTO server
-//	    (id, type, name, state, labels, ipv4, port, created_at, updated_at)
+//	    (id, type, name, state, labels, ipv4, port, created_at, updated_at, cluster_id)
 //	VALUES
-//	    ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+//	    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 func (q *Queries) CreateServer(ctx context.Context, arg CreateServerParams) error {
 	_, err := q.db.Exec(ctx, createServer,
 		arg.ID,
@@ -97,6 +98,7 @@ func (q *Queries) CreateServer(ctx context.Context, arg CreateServerParams) erro
 		arg.Port,
 		arg.CreatedAt,
 		arg.UpdatedAt,
+		arg.ClusterID,
 	)
 	return err
 }
@@ -114,26 +116,46 @@ func (q *Queries) DeleteServer(ctx context.Context, id string) error {
 }
 
 const serverByID = `-- name: ServerByID :one
-SELECT id, type, name, state, labels, ipv4, port, cluster_id, created_at, updated_at FROM server WHERE id = $1
+SELECT
+    server.id, server.type, server.name, server.state, server.labels, server.ipv4, server.port, server.cluster_id, server.created_at, server.updated_at,
+    cluster.id, cluster.name, cluster.slots, cluster.created_at, cluster.updated_at
+FROM server
+    JOIN cluster ON cluster.id = server.cluster_id
+WHERE server.id = $1
 `
+
+type ServerByIDRow struct {
+	Server  Server
+	Cluster Cluster
+}
 
 // ServerByID
 //
-//	SELECT id, type, name, state, labels, ipv4, port, cluster_id, created_at, updated_at FROM server WHERE id = $1
-func (q *Queries) ServerByID(ctx context.Context, id string) (Server, error) {
+//	SELECT
+//	    server.id, server.type, server.name, server.state, server.labels, server.ipv4, server.port, server.cluster_id, server.created_at, server.updated_at,
+//	    cluster.id, cluster.name, cluster.slots, cluster.created_at, cluster.updated_at
+//	FROM server
+//	    JOIN cluster ON cluster.id = server.cluster_id
+//	WHERE server.id = $1
+func (q *Queries) ServerByID(ctx context.Context, id string) (ServerByIDRow, error) {
 	row := q.db.QueryRow(ctx, serverByID, id)
-	var i Server
+	var i ServerByIDRow
 	err := row.Scan(
-		&i.ID,
-		&i.Type,
-		&i.Name,
-		&i.State,
-		&i.Labels,
-		&i.Ipv4,
-		&i.Port,
-		&i.ClusterID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
+		&i.Server.ID,
+		&i.Server.Type,
+		&i.Server.Name,
+		&i.Server.State,
+		&i.Server.Labels,
+		&i.Server.Ipv4,
+		&i.Server.Port,
+		&i.Server.ClusterID,
+		&i.Server.CreatedAt,
+		&i.Server.UpdatedAt,
+		&i.Cluster.ID,
+		&i.Cluster.Name,
+		&i.Cluster.Slots,
+		&i.Cluster.CreatedAt,
+		&i.Cluster.UpdatedAt,
 	)
 	return i, err
 }
@@ -144,8 +166,9 @@ UPDATE server SET
     labels = $2,
     ipv4 = $3,
     port = $4,
-    updated_at = $5
-WHERE id = $6
+    updated_at = $5,
+    state = $6
+WHERE id = $7
 `
 
 type UpdateServerParams struct {
@@ -154,6 +177,7 @@ type UpdateServerParams struct {
 	Ipv4      *netip.Addr
 	Port      pgtype.Int4
 	UpdatedAt time.Time
+	State     ServerState
 	ID        string
 }
 
@@ -164,8 +188,9 @@ type UpdateServerParams struct {
 //	    labels = $2,
 //	    ipv4 = $3,
 //	    port = $4,
-//	    updated_at = $5
-//	WHERE id = $6
+//	    updated_at = $5,
+//	    state = $6
+//	WHERE id = $7
 func (q *Queries) UpdateServer(ctx context.Context, arg UpdateServerParams) error {
 	_, err := q.db.Exec(ctx, updateServer,
 		arg.Name,
@@ -173,6 +198,7 @@ func (q *Queries) UpdateServer(ctx context.Context, arg UpdateServerParams) erro
 		arg.Ipv4,
 		arg.Port,
 		arg.UpdatedAt,
+		arg.State,
 		arg.ID,
 	)
 	return err

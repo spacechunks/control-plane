@@ -10,11 +10,11 @@ import (
 type ServerState string
 
 const (
-	ServerStatePending  = "pending"
-	ServerStateCreating = "creating"
-	ServerStateRunning  = "running"
-	ServerStateDeleting = "deleting"
-	ServerStateError    = "error"
+	ServerStatePending  ServerState = "pending"
+	ServerStateCreating ServerState = "creating"
+	ServerStateRunning  ServerState = "running"
+	ServerStateDeleting ServerState = "deleting"
+	ServerStateError    ServerState = "error"
 )
 
 func (s ServerState) String() string {

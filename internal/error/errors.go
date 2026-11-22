@@ -11,6 +11,14 @@ type APIError struct {
 	StatusCode int
 }
 
+func Unimplemented(msg string) *APIError {
+	return &APIError{
+		Type:       "unimplemented",
+		Message:    msg,
+		StatusCode: http.StatusNotImplemented,
+	}
+}
+
 func ResourceExhausted(msg string) *APIError {
 	return &APIError{
 		Type:       "resource_exhausted",
