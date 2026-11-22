@@ -13,7 +13,55 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const bestCluster = `-- name: BestCluster :one
+
+SELECT
+    cluster.id, cluster.name, cluster.slots, cluster.created_at, cluster.updated_at,
+    COUNT(server.id) AS server_count
+FROM cluster
+    LEFT JOIN server ON server.cluster_id = cluster.id
+WHERE cluster.slots > (SELECT COUNT(*) FROM server WHERE cluster_id = cluster.id)
+GROUP BY cluster.id
+ORDER BY server_count ASC, random() ASC
+LIMIT 1
+`
+
+type BestClusterRow struct {
+	ID          string
+	Name        string
+	Slots       int32
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	ServerCount int64
+}
+
+// CLUSTER
+//
+//	SELECT
+//	    cluster.id, cluster.name, cluster.slots, cluster.created_at, cluster.updated_at,
+//	    COUNT(server.id) AS server_count
+//	FROM cluster
+//	    LEFT JOIN server ON server.cluster_id = cluster.id
+//	WHERE cluster.slots > (SELECT COUNT(*) FROM server WHERE cluster_id = cluster.id)
+//	GROUP BY cluster.id
+//	ORDER BY server_count ASC, random() ASC
+//	LIMIT 1
+func (q *Queries) BestCluster(ctx context.Context) (BestClusterRow, error) {
+	row := q.db.QueryRow(ctx, bestCluster)
+	var i BestClusterRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Slots,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ServerCount,
+	)
+	return i, err
+}
+
 const createServer = `-- name: CreateServer :exec
+
 INSERT INTO server
     (id, type, name, state, labels, ipv4, port, created_at, updated_at)
 VALUES
@@ -32,7 +80,7 @@ type CreateServerParams struct {
 	UpdatedAt time.Time
 }
 
-// CreateServer
+// SERVER
 //
 //	INSERT INTO server
 //	    (id, type, name, state, labels, ipv4, port, created_at, updated_at)
@@ -66,12 +114,12 @@ func (q *Queries) DeleteServer(ctx context.Context, id string) error {
 }
 
 const serverByID = `-- name: ServerByID :one
-SELECT id, type, name, state, labels, ipv4, port, created_at, updated_at FROM server WHERE id = $1
+SELECT id, type, name, state, labels, ipv4, port, cluster_id, created_at, updated_at FROM server WHERE id = $1
 `
 
 // ServerByID
 //
-//	SELECT id, type, name, state, labels, ipv4, port, created_at, updated_at FROM server WHERE id = $1
+//	SELECT id, type, name, state, labels, ipv4, port, cluster_id, created_at, updated_at FROM server WHERE id = $1
 func (q *Queries) ServerByID(ctx context.Context, id string) (Server, error) {
 	row := q.db.QueryRow(ctx, serverByID, id)
 	var i Server
@@ -83,6 +131,7 @@ func (q *Queries) ServerByID(ctx context.Context, id string) (Server, error) {
 		&i.Labels,
 		&i.Ipv4,
 		&i.Port,
+		&i.ClusterID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

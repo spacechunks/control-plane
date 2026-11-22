@@ -3,6 +3,8 @@ package server
 import (
 	"net/netip"
 	"time"
+
+	"github.com/spacechunks/control-plane/internal/service/server/kube"
 )
 
 type ServerState string
@@ -38,6 +40,7 @@ type Server struct {
 	Labels    map[string]string
 	Network   *Network
 	State     ServerState
+	Cluster   kube.Cluster
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
