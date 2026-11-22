@@ -11,7 +11,12 @@ import (
 	"github.com/spacechunks/control-plane/internal/service/server/server"
 )
 
-func (db DB) CreateServer(ctx context.Context, args server.CreateServerArgs) (server.Server, error) {
+type serverRelationsRow struct {
+	Server  query.Server
+	Cluster query.Cluster
+}
+
+func (db DB) CreateServer(ctx context.Context, args server.CreateServerDBArgs) (server.Server, error) {
 	release, q, err := db.queries(ctx)
 	if err != nil {
 		return server.Server{}, fmt.Errorf("queries: %w", err)
@@ -32,21 +37,27 @@ func (db DB) CreateServer(ctx context.Context, args server.CreateServerArgs) (se
 		Labels:    labels,
 		CreatedAt: args.CreatedAt,
 		UpdatedAt: args.UpdatedAt,
+		ClusterID: new(args.ClusterID),
 	}
 
 	if err := q.CreateServer(ctx, params); err != nil {
 		return server.Server{}, fmt.Errorf("create: %w", err)
 	}
 
-	return server.Server{
-		ID:        args.ID,
-		Name:      args.Name,
-		Type:      args.Type,
-		Labels:    args.Labels,
-		State:     args.State,
-		CreatedAt: args.CreatedAt,
-		UpdatedAt: args.UpdatedAt,
-	}, nil
+	r, err := q.ServerByID(ctx, args.ID)
+	if err != nil {
+		return server.Server{}, fmt.Errorf("server by id: %w", err)
+	}
+
+	ret, err := toDomainServer(serverRelationsRow{
+		Server:  r.Server,
+		Cluster: r.Cluster,
+	})
+	if err != nil {
+		return server.Server{}, fmt.Errorf("to domain: %w", err)
+	}
+
+	return ret, nil
 }
 
 func (db DB) ServerByID(ctx context.Context, id string) (server.Server, error) {
@@ -56,12 +67,15 @@ func (db DB) ServerByID(ctx context.Context, id string) (server.Server, error) {
 	}
 	defer release()
 
-	s, err := q.ServerByID(ctx, id)
+	r, err := q.ServerByID(ctx, id)
 	if err != nil {
 		return server.Server{}, fmt.Errorf("get: %w", err)
 	}
 
-	ret, err := toDomainServer(s)
+	ret, err := toDomainServer(serverRelationsRow{
+		Server:  r.Server,
+		Cluster: r.Cluster,
+	})
 	if err != nil {
 		return server.Server{}, fmt.Errorf("to domain: %w", err)
 	}
@@ -69,7 +83,7 @@ func (db DB) ServerByID(ctx context.Context, id string) (server.Server, error) {
 	return ret, nil
 }
 
-func (db DB) UpdateServer(ctx context.Context, args server.UpdateServerArgs) (server.Server, error) {
+func (db DB) UpdateServer(ctx context.Context, args server.UpdateServerDBArgs) (server.Server, error) {
 	var ret server.Server
 
 	if err := db.doTX(ctx, func(q *query.Queries) error {
@@ -79,12 +93,17 @@ func (db DB) UpdateServer(ctx context.Context, args server.UpdateServerArgs) (se
 		}
 
 		update := query.UpdateServerParams{
-			Name:      old.Name,
-			Labels:    old.Labels,
-			Ipv4:      old.Ipv4,
-			Port:      old.Port,
+			Name:      old.Server.Name,
+			Labels:    old.Server.Labels,
+			Ipv4:      old.Server.Ipv4,
+			Port:      old.Server.Port,
 			UpdatedAt: args.UpdatedAt,
-			ID:        old.ID,
+			ID:        old.Server.ID,
+			State:     old.Server.State,
+		}
+
+		if args.State != nil {
+			update.State = query.ServerState(strings.ToUpper(args.State.String()))
 		}
 
 		if args.Name != nil {
@@ -111,12 +130,15 @@ func (db DB) UpdateServer(ctx context.Context, args server.UpdateServerArgs) (se
 			return fmt.Errorf("update: %w", err)
 		}
 
-		s, err := q.ServerByID(ctx, args.ID)
+		r, err := q.ServerByID(ctx, args.ID)
 		if err != nil {
 			return fmt.Errorf("server by id after update: %w", err)
 		}
 
-		ret, err = toDomainServer(s)
+		ret, err = toDomainServer(serverRelationsRow{
+			Server:  r.Server,
+			Cluster: r.Cluster,
+		})
 		if err != nil {
 			return fmt.Errorf("to domain: %w", err)
 		}
@@ -132,7 +154,7 @@ func (db DB) UpdateServer(ctx context.Context, args server.UpdateServerArgs) (se
 func (db DB) DeleteServer(ctx context.Context, id string) (server.Server, error) {
 	var ret server.Server
 	if err := db.doTX(ctx, func(q *query.Queries) error {
-		s, err := q.ServerByID(ctx, id)
+		r, err := q.ServerByID(ctx, id)
 		if err != nil {
 			return fmt.Errorf("server by id: %w", err)
 		}
@@ -141,7 +163,10 @@ func (db DB) DeleteServer(ctx context.Context, id string) (server.Server, error)
 			return fmt.Errorf("update: %w", err)
 		}
 
-		ret, err = toDomainServer(s)
+		ret, err = toDomainServer(serverRelationsRow{
+			Server:  r.Server,
+			Cluster: r.Cluster,
+		})
 		if err != nil {
 			return fmt.Errorf("to domain: %w", err)
 		}

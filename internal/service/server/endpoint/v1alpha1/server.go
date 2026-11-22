@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	serverv1alpha1 "github.com/spacechunks/control-plane/api/server/v1alpha1"
+	apierr "github.com/spacechunks/control-plane/internal/error"
 	"github.com/spacechunks/control-plane/internal/ptr"
 	"github.com/spacechunks/control-plane/internal/service/server/server"
 )
@@ -18,16 +19,16 @@ func (s Handler) CreateServer(
 	ctx context.Context,
 	req serverv1alpha1.CreateServerRequestObject,
 ) (serverv1alpha1.CreateServerResponseObject, error) {
-	if req.Body.Type == serverv1alpha1.Persistent {
-		return nil, fmt.Errorf("not implemented")
+	if req.Body.Type == serverv1alpha1.Persistent || req.Body.Type == serverv1alpha1.Ephemeral {
+		return nil, apierr.Unimplemented("persistent and ephemeral server types are not implemented")
 	}
 
-	args := server.CreateEphemeralServerArgs{
+	args := server.CreateMinigameServerArgs{
 		Name:   req.Body.Name,
 		Labels: ptr.Deref(req.Body.Labels),
 	}
 
-	serv, err := s.serverService.CreateEphemeralServer(ctx, args)
+	serv, err := s.serverService.CreateMinigameServer(ctx, args)
 	if err != nil {
 		return nil, fmt.Errorf("ehphemeral server: %w", err)
 	}
