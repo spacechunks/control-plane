@@ -64,6 +64,7 @@ type ServerType string
 const (
 	ServerTypeEPHEMERAL  ServerType = "EPHEMERAL"
 	ServerTypePERSISTENT ServerType = "PERSISTENT"
+	ServerTypeMINIGAME   ServerType = "MINIGAME"
 )
 
 func (e *ServerType) Scan(src interface{}) error {
@@ -101,6 +102,14 @@ func (ns NullServerType) Value() (driver.Value, error) {
 	return string(ns.ServerType), nil
 }
 
+type Cluster struct {
+	ID        string
+	Name      string
+	Slots     int32
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
 type SchemaMigration struct {
 	Version string
 }
@@ -113,6 +122,7 @@ type Server struct {
 	Labels    []byte
 	Ipv4      *netip.Addr
 	Port      pgtype.Int4
+	ClusterID *string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

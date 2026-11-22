@@ -63,7 +63,7 @@ func TestServerByID(t *testing.T) {
 		UpdatedAt: expected.UpdatedAt,
 	}
 
-	test.InsertServer(t, expected)
+	test.InsertServers(t, expected)
 
 	actual, err := pg.ServerByID(ctx, args.ID)
 	require.NoError(t, err)
@@ -153,7 +153,7 @@ func TestUpdateServer(t *testing.T) {
 				pg  = runDB(t)
 			)
 
-			test.InsertServer(t, fixture.Server())
+			test.InsertServers(t, fixture.Server())
 
 			actual, err := pg.UpdateServer(ctx, tt.args)
 			require.NoError(t, err)
@@ -173,7 +173,7 @@ func TestDeleteServer(t *testing.T) {
 		expected = fixture.Server()
 	)
 
-	test.InsertServer(t, expected)
+	test.InsertServers(t, expected)
 
 	actual, err := pg.DeleteServer(ctx, expected.ID)
 	require.NoError(t, err)

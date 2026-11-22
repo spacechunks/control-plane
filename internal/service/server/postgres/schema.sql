@@ -35,13 +35,27 @@ CREATE TYPE public.server_state AS ENUM (
 
 CREATE TYPE public.server_type AS ENUM (
     'EPHEMERAL',
-    'PERSISTENT'
+    'PERSISTENT',
+    'MINIGAME'
 );
 
 
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: cluster; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.cluster (
+    id uuid NOT NULL,
+    name character varying(256) DEFAULT ''::character varying NOT NULL,
+    slots integer DEFAULT 0 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
 
 --
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
@@ -64,9 +78,18 @@ CREATE TABLE public.server (
     labels jsonb DEFAULT '{}'::jsonb NOT NULL,
     ipv4 inet,
     port integer,
+    cluster_id uuid,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
+
+
+--
+-- Name: cluster cluster_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster
+    ADD CONSTRAINT cluster_pkey PRIMARY KEY (id);
 
 
 --
@@ -83,6 +106,14 @@ ALTER TABLE ONLY public.schema_migrations
 
 ALTER TABLE ONLY public.server
     ADD CONSTRAINT server_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: server server_cluster_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.server
+    ADD CONSTRAINT server_cluster_id_fkey FOREIGN KEY (cluster_id) REFERENCES public.cluster(id);
 
 
 --
