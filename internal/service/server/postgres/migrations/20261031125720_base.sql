@@ -18,6 +18,7 @@ CREATE TABLE server (
     labels JSONB NOT NULL DEFAULT '{}',
     ipv4 INET,
     port INTEGER,
+    image_url TEXT NOT NULL,
     cluster_id UUID REFERENCES cluster(id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()

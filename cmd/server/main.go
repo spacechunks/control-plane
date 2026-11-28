@@ -54,6 +54,10 @@ func main() {
 		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 		<-c
 		_ = serv.Shutdown(ctx)
+
+		if err := server.Stop(ctx); err != nil {
+			logger.ErrorContext(ctx, "error stopping server module", "err", err)
+		}
 	}()
 
 	if err := serv.ListenAndServe(); err != nil {

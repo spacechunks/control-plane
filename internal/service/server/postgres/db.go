@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spacechunks/control-plane/internal/service/server/postgres/query"
 	"github.com/spacechunks/control-plane/internal/service/server/server"
@@ -33,14 +34,14 @@ func (db DB) queries(ctx context.Context) (func(), *query.Queries, error) {
 	return conn.Release, query.New(conn), nil
 }
 
-func (db DB) doTX(ctx context.Context, fn func(q *query.Queries) error) error {
+func (db DB) doTX(ctx context.Context, fn func(tx pgx.Tx, q *query.Queries) error) error {
 	if err := db.pool.AcquireFunc(ctx, func(conn *pgxpool.Conn) error {
 		tx, err := conn.Begin(ctx)
 		if err != nil {
 			return fmt.Errorf("begin tx: %w", err)
 		}
 
-		if err := fn(query.New(tx)); err != nil {
+		if err := fn(tx, query.New(tx)); err != nil {
 			if txErr := tx.Rollback(ctx); txErr != nil {
 				// only log rollback related error, because we want to
 				// pass the actual error that caused the rollback back to the caller

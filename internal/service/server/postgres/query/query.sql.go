@@ -63,9 +63,9 @@ func (q *Queries) BestCluster(ctx context.Context) (BestClusterRow, error) {
 const createServer = `-- name: CreateServer :exec
 
 INSERT INTO server
-    (id, type, name, state, labels, ipv4, port, created_at, updated_at, cluster_id)
+    (id, type, name, state, labels, ipv4, port, created_at, updated_at, cluster_id, image_url)
 VALUES
-    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 `
 
 type CreateServerParams struct {
@@ -79,14 +79,15 @@ type CreateServerParams struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	ClusterID *string
+	ImageUrl  string
 }
 
 // SERVER
 //
 //	INSERT INTO server
-//	    (id, type, name, state, labels, ipv4, port, created_at, updated_at, cluster_id)
+//	    (id, type, name, state, labels, ipv4, port, created_at, updated_at, cluster_id, image_url)
 //	VALUES
-//	    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+//	    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 func (q *Queries) CreateServer(ctx context.Context, arg CreateServerParams) error {
 	_, err := q.db.Exec(ctx, createServer,
 		arg.ID,
@@ -99,6 +100,7 @@ func (q *Queries) CreateServer(ctx context.Context, arg CreateServerParams) erro
 		arg.CreatedAt,
 		arg.UpdatedAt,
 		arg.ClusterID,
+		arg.ImageUrl,
 	)
 	return err
 }
@@ -117,7 +119,7 @@ func (q *Queries) DeleteServer(ctx context.Context, id string) error {
 
 const serverByID = `-- name: ServerByID :one
 SELECT
-    server.id, server.type, server.name, server.state, server.labels, server.ipv4, server.port, server.cluster_id, server.created_at, server.updated_at,
+    server.id, server.type, server.name, server.state, server.labels, server.ipv4, server.port, server.image_url, server.cluster_id, server.created_at, server.updated_at,
     cluster.id, cluster.name, cluster.slots, cluster.created_at, cluster.updated_at
 FROM server
     JOIN cluster ON cluster.id = server.cluster_id
@@ -132,7 +134,7 @@ type ServerByIDRow struct {
 // ServerByID
 //
 //	SELECT
-//	    server.id, server.type, server.name, server.state, server.labels, server.ipv4, server.port, server.cluster_id, server.created_at, server.updated_at,
+//	    server.id, server.type, server.name, server.state, server.labels, server.ipv4, server.port, server.image_url, server.cluster_id, server.created_at, server.updated_at,
 //	    cluster.id, cluster.name, cluster.slots, cluster.created_at, cluster.updated_at
 //	FROM server
 //	    JOIN cluster ON cluster.id = server.cluster_id
@@ -148,6 +150,7 @@ func (q *Queries) ServerByID(ctx context.Context, id string) (ServerByIDRow, err
 		&i.Server.Labels,
 		&i.Server.Ipv4,
 		&i.Server.Port,
+		&i.Server.ImageUrl,
 		&i.Server.ClusterID,
 		&i.Server.CreatedAt,
 		&i.Server.UpdatedAt,

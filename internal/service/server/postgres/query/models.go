@@ -122,6 +122,7 @@ type Server struct {
 	Labels    []byte
 	Ipv4      *netip.Addr
 	Port      pgtype.Int4
+	ImageUrl  string
 	ClusterID *string
 	CreatedAt time.Time
 	UpdatedAt time.Time

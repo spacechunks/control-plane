@@ -30,6 +30,7 @@ func toDomainServer(r serverRelationsRow) (server.Server, error) {
 			CreatedAt: r.Cluster.CreatedAt,
 			UpdateAt:  r.Cluster.UpdatedAt,
 		},
+		ImageURL: r.Server.ImageUrl,
 	}
 
 	if r.Server.Ipv4 != nil {

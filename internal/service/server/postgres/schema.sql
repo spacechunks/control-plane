@@ -78,6 +78,7 @@ CREATE TABLE public.server (
     labels jsonb DEFAULT '{}'::jsonb NOT NULL,
     ipv4 inet,
     port integer,
+    image_url text NOT NULL,
     cluster_id uuid,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL

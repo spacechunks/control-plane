@@ -16,9 +16,9 @@ func InsertServers(t *testing.T, servers ...server.Server) {
 		ctx = context.Background()
 		q   = `
 INSERT INTO server
-    (id, type, name, state, labels,created_at, updated_at, cluster_id)
+    (id, type, name, state, labels,created_at, updated_at, cluster_id, image_url)
 VALUES
-    ($1, $2, $3, $4, $5, $6, $7, $8);
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9);
 `
 		conn = testdb.New(t)
 	)
@@ -35,6 +35,7 @@ VALUES
 			s.CreatedAt,
 			s.UpdatedAt,
 			s.Cluster.ID,
+			s.ImageURL,
 		)
 		require.NoError(t, err)
 

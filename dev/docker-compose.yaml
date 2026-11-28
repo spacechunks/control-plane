@@ -5,6 +5,8 @@ services:
       SERVER_DB_URL: postgres://app:secret@db:5432/server_service?sslmode=disable
       SERVER_NAMESPACE: default
       SERVER_CLUSTERS: ${SERVER_CLUSTERS}
+      SERVER_MAX_SERVER_WORKERS: 5
+      SERVER_QUEUE_CONFIG_MAX_ATTEMPTS: 5
     networks:
     - default
     - kind

@@ -41,6 +41,7 @@ type Server struct {
 	Network   *Network
 	State     ServerState
 	Cluster   kube.Cluster
+	ImageURL  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

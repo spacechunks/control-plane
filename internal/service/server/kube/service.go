@@ -2,12 +2,13 @@ package kube
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
+	k8slabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -47,7 +48,7 @@ func (c Client) TailLogs(ctx context.Context, podName string, containerName stri
 
 func (c Client) PodByLabels(ctx context.Context, l map[string]string) (*corev1.PodList, error) {
 	list, err := c.clientset.CoreV1().Pods(c.namespace).List(ctx, metav1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(l).String(),
+		LabelSelector: k8slabels.SelectorFromSet(l).String(),
 	})
 	if err != nil {
 		return nil, err
@@ -62,6 +63,18 @@ func (c Client) CreateJob(
 	image string,
 	labels map[string]string,
 ) error {
+	jobs, err := c.clientset.BatchV1().Jobs(c.namespace).List(ctx, metav1.ListOptions{
+		LabelSelector: k8slabels.SelectorFromSet(labels).String(),
+	})
+	if err != nil {
+		return fmt.Errorf("list jobs: %w", err)
+	}
+
+	// job already exists, do not insert new
+	if len(jobs.Items) > 0 {
+		return nil
+	}
+
 	spec := &batchv1.Job{
 		Name:      name,
 		Namespace: c.namespace,
@@ -87,9 +100,9 @@ func (c Client) CreateJob(
 		},
 	}
 
-	_, err := c.clientset.BatchV1().Jobs(c.namespace).Create(ctx, spec, metav1.CreateOptions{})
+	_, err = c.clientset.BatchV1().Jobs(c.namespace).Create(ctx, spec, metav1.CreateOptions{})
 	if err != nil {
-		return err
+		return fmt.Errorf("create job: %w", err)
 	}
 
 	return nil

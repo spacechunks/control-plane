@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 	"time"
+
+	"github.com/spacechunks/control-plane/internal/queue"
 )
 
 type CreateServerDBArgs struct {
@@ -12,6 +14,7 @@ type CreateServerDBArgs struct {
 	Type      ServerType
 	State     ServerState
 	ClusterID string
+	ImageURL  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -26,7 +29,7 @@ type UpdateServerDBArgs struct {
 }
 
 type Repository interface {
-	CreateServer(ctx context.Context, args CreateServerDBArgs) (Server, error)
+	CreateServer(ctx context.Context, args CreateServerDBArgs, jobFn queue.InsertJobTXFunc) (Server, error)
 	ServerByID(ctx context.Context, id string) (Server, error)
 	UpdateServer(ctx context.Context, args UpdateServerDBArgs) (Server, error)
 	DeleteServer(ctx context.Context, id string) (Server, error)

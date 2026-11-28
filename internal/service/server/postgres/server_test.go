@@ -9,6 +9,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/jackc/pgx/v5"
+	"github.com/riverqueue/river"
+	"github.com/riverqueue/river/rivertype"
 	"github.com/spacechunks/control-plane/internal/service/server/server"
 	"github.com/spacechunks/control-plane/internal/service/server/test"
 	"github.com/spacechunks/control-plane/internal/service/server/test/fixture"
@@ -24,6 +26,7 @@ func TestCreateServer(t *testing.T) {
 		expected = fixture.Server(func(s *server.Server) {
 			s.Network = nil
 		})
+		called = false
 	)
 
 	args := server.CreateServerDBArgs{
@@ -33,18 +36,26 @@ func TestCreateServer(t *testing.T) {
 		State:     expected.State,
 		Labels:    expected.Labels,
 		ClusterID: fixture.Cluster().ID,
+		ImageURL:  expected.ImageURL,
 		CreatedAt: expected.CreatedAt,
 		UpdatedAt: expected.UpdatedAt,
 	}
 
 	test.InsertClusters(t, fixture.Cluster())
 
-	actual, err := pg.CreateServer(ctx, args)
+	jobFn := func(ctx context.Context, tx pgx.Tx, args river.JobArgs, opts *river.InsertOpts) (*rivertype.JobInsertResult, error) {
+		called = true
+		return nil, nil
+	}
+
+	actual, err := pg.CreateServer(ctx, args, jobFn)
 	require.NoError(t, err)
 
 	if d := cmp.Diff(expected, actual, cmpopts.EquateComparable(netip.Addr{})); d != "" {
 		t.Fatalf("mismatch (-want +got):\n%s", d)
 	}
+
+	require.True(t, called)
 }
 
 func TestServerByID(t *testing.T) {
@@ -64,6 +75,7 @@ func TestServerByID(t *testing.T) {
 		Labels:    expected.Labels,
 		CreatedAt: expected.CreatedAt,
 		UpdatedAt: expected.UpdatedAt,
+		ImageURL:  expected.ImageURL,
 	}
 
 	test.InsertClusters(t, fixture.Cluster())

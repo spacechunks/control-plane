@@ -5,19 +5,27 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/riverqueue/river"
+	"github.com/spacechunks/control-plane/internal/queue"
 	endpointv1alpha1 "github.com/spacechunks/control-plane/internal/service/server/endpoint/v1alpha1"
 	"github.com/spacechunks/control-plane/internal/service/server/kube"
 	"github.com/spacechunks/control-plane/internal/service/server/postgres"
 	"github.com/spacechunks/control-plane/internal/service/server/server"
+	"github.com/spacechunks/control-plane/internal/service/server/worker"
 )
 
 type Config struct {
-	DBURL     string          `env:"DB_URL,required"`
-	Namespace string          `env:"NAMESPACE,required"`
-	Clusters  kube.ClusterSet `env:"CLUSTERS,required"`
+	DBURL            string          `env:"DB_URL,required"`
+	Namespace        string          `env:"NAMESPACE,required"`
+	Clusters         kube.ClusterSet `env:"CLUSTERS,required"`
+	QueueConfig      queue.Config    `envPrefix:"QUEUE_CONFIG_"`
+	MaxServerWorkers int             `env:"MAX_SERVER_WORKERS,required"`
 }
+
+var q *queue.RiverClient
 
 func Init(ctx context.Context, logger *slog.Logger, mux *http.ServeMux, cfg Config) error {
 	pgxCfg, err := pgxpool.ParseConfig(cfg.DBURL)
@@ -31,13 +39,46 @@ func Init(ctx context.Context, logger *slog.Logger, mux *http.ServeMux, cfg Conf
 	}
 
 	var (
-		pg            = postgres.NewDB(logger.With("module", "server-postgres"), pool)
+		pg = postgres.NewDB(logger.With("module", "server-postgres"), pool)
+		qs = map[string]river.QueueConfig{
+			"server_v1": {
+				MaxWorkers: cfg.MaxServerWorkers,
+			},
+		}
+	)
+
+	workers := river.NewWorkers()
+
+	createMinigame := worker.NewCreateMinigameServerWorker(
+		logger.With("component", "create_minigame_server_worker"),
+		pg,
+		5*time.Minute, // TODO: configurable
+		5*time.Minute, // TODO: configurable
+		cfg.Clusters,
+		cfg.Namespace,
+	)
+
+	if err := river.AddWorkerSafely(workers, createMinigame); err != nil {
+		return fmt.Errorf("add create server worker: %w", err)
+	}
+
+	q, err = queue.NewRiverClient(logger.With("component", "river-server"), cfg.QueueConfig, pool, qs, workers)
+	if err != nil {
+		return fmt.Errorf("queue client: %w", err)
+	}
+
+	if err := q.Migrate(ctx); err != nil {
+		return fmt.Errorf("migrate riverqueue: %w", err)
+	}
+
+	var (
 		serverService = server.NewService(
 			logger.With("component", "server-service"),
 			pg,
 			pg,
 			cfg.Clusters,
 			cfg.Namespace,
+			q,
 		)
 		serverHandler = endpointv1alpha1.NewHandler(serverService)
 	)
@@ -46,5 +87,21 @@ func Init(ctx context.Context, logger *slog.Logger, mux *http.ServeMux, cfg Conf
 		return fmt.Errorf("add handlers: %w", err)
 	}
 
+	logger.InfoContext(ctx, "migrating")
+
+	if err := q.Start(ctx); err != nil {
+		return fmt.Errorf("start queue: %w", err)
+	}
+
+	serverService.CreateMinigameServer(ctx, server.CreateMinigameServerArgs{
+		Name:   "test",
+		Labels: nil,
+		Image:  "itzg/minecraft-server:latest",
+	})
+
 	return nil
+}
+
+func Stop(ctx context.Context) error {
+	return q.Stop(ctx)
 }
