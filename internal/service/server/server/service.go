@@ -68,7 +68,7 @@ func (s Backend) CreateMinigameServer(ctx context.Context, args CreateMinigameSe
 		ImageURL:  args.Image,
 	}
 
-	server, err := s.serverRepo.CreateServer(ctx, dbArgs, s.q.InsertJob)
+	server, err := s.serverRepo.CreateServer(ctx, dbArgs, s.q.InsertJobTX)
 	if err != nil {
 		return Server{}, fmt.Errorf("create: %w", err)
 	}

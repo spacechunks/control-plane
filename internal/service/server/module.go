@@ -25,7 +25,10 @@ type Config struct {
 	MaxServerWorkers int             `env:"MAX_SERVER_WORKERS,required"`
 }
 
-var q *queue.RiverClient
+var (
+	q   *queue.RiverClient
+	lis *server.PodDeletionListener
+)
 
 func Init(ctx context.Context, logger *slog.Logger, mux *http.ServeMux, cfg Config) error {
 	pgxCfg, err := pgxpool.ParseConfig(cfg.DBURL)
@@ -41,7 +44,7 @@ func Init(ctx context.Context, logger *slog.Logger, mux *http.ServeMux, cfg Conf
 	var (
 		pg = postgres.NewDB(logger.With("module", "server-postgres"), pool)
 		qs = map[string]river.QueueConfig{
-			"server_v1": {
+			"minigame_server_v1": {
 				MaxWorkers: cfg.MaxServerWorkers,
 			},
 		}
@@ -71,6 +74,17 @@ func Init(ctx context.Context, logger *slog.Logger, mux *http.ServeMux, cfg Conf
 		return fmt.Errorf("migrate riverqueue: %w", err)
 	}
 
+	lis := server.NewPodDeletionListener(
+		logger.With("component", "pod-deletion-listener"),
+		pg,
+		cfg.Clusters,
+		cfg.Namespace,
+	)
+
+	if err := lis.Start(ctx); err != nil {
+		return fmt.Errorf("start pod deletion listener: %w", err)
+	}
+
 	var (
 		serverService = server.NewService(
 			logger.With("component", "server-service"),
@@ -96,12 +110,13 @@ func Init(ctx context.Context, logger *slog.Logger, mux *http.ServeMux, cfg Conf
 	serverService.CreateMinigameServer(ctx, server.CreateMinigameServerArgs{
 		Name:   "test",
 		Labels: nil,
-		Image:  "itzg/minecraft-server:latest",
+		Image:  "ghcr.io/spacechunks/paper-docker:26.2-112",
 	})
 
 	return nil
 }
 
 func Stop(ctx context.Context) error {
+	lis.Stop()
 	return q.Stop(ctx)
 }

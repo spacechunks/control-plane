@@ -60,7 +60,7 @@ func (c RiverClient) Stop(ctx context.Context) error {
 	return c.river.Stop(ctx)
 }
 
-func (c RiverClient) InsertJob(
+func (c RiverClient) InsertJobTX(
 	ctx context.Context,
 	tx pgx.Tx,
 	args river.JobArgs,

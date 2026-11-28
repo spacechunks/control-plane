@@ -59,8 +59,9 @@ func (db DB) CreateServer(
 			ServerID: args.ID,
 		}
 
+		// TODO: at some point introduce unit-of-work or something
 		if _, err := jobFunc(ctx, tx, jobArgs, &river.InsertOpts{
-			Queue: "server_v1",
+			Queue: "minigame_server_v1",
 		}); err != nil {
 			return fmt.Errorf("create job: %w", err)
 		}
